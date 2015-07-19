@@ -66,6 +66,25 @@ app.get('/jose/validate-token', function(req, res) {
         }
     });
 });
+// Validating a token from the laravel app using a .pem key.
+app.get('/jose/validate-token-with-pem', function(req, res) {
+    var token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzUxMiJ9.eyJ1aWQiOjEyMywiaWF0IjoiMTQzNzI3NzE3NCJ9.Rt0_nMWyYlE-x1UG9v7LSF06Yq-FDW0a_HsD0LtYIZcQz7pFlsnbk01w8oVerREQJ_kOqP9gKW6nAY6DLmGBnIdSzQIapWWXwyfk1v_NEVq_7sbta8PDGCTyKJxQ_SgDZcqVM7ewfYHCAr0jqhRaAnH3jjpTwnvxhzr5qFTjFHMKeeEEJckI0gHUYC64fsHZjLbfuqizjZjBnyNlQjsMEwLWTDYnmaFHbJkJKiZ4FGUIIsJTueyYATdC2VN_dislQkl_gjBr1Q-vwyufkcCjcEffuDe-8WPjxl6upcEcLTwOWd9p4id4uJhqQ1Lj-eOC5Ed7VSOEi64QBLLgOtm4jQ";
+
+    var cert = fs.readFileSync('JWT-KEYS/jwt_rsa_2048_public.pem');
+
+    jwt.verify(token, cert, {
+        algorithms: ["RS512"]
+    }, function(err, decoded) {
+        if (err) {
+            return res.json({ success: false, message: 'Failed to authenticate token.' });
+        } else {
+            res.json({
+                success: true,
+                results: decoded
+            });
+        }
+    });
+});
 // Respond with a token for validation in the laravel app
 app.get('/jose/get-token', function(req, res) {
     var token = jwt.sign({
@@ -76,6 +95,24 @@ app.get('/jose/get-token', function(req, res) {
     });
 
     // return the information including token as JSON
+    res.json({
+        success: true,
+        message: 'Enjoy your token!',
+        token: token
+    });
+});
+// Respond with a token for validation in the laravel app, using a .pem key
+app.get('/jose/get-token-with-pem', function(req, res) {
+    var cert = fs.readFileSync('JWT-KEYS/jwt_rsa_2048_private.pem');  // get private key
+
+    var token = jwt.sign({
+        uid: 123,
+        iat: "1437250128"
+    }, cert, {
+        expiresInMinutes: 1440, // expires in 24 hours
+        algorithm: "RS512"
+    });
+
     res.json({
         success: true,
         message: 'Enjoy your token!',
